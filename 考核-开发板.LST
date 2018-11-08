@@ -1,0 +1,224 @@
+C51 COMPILER V9.01   ¿¼ºË_¿ª·¢_å                                                           09/25/2018 18:07:57 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE ¿¼ºË_¿ª·¢_å
+OBJECT MODULE PLACED IN ¿¼ºË-¿ª·¢°å.OBJ
+COMPILER INVOKED BY: E:\mdk514\keil5\C51\BIN\C51.EXE ¿¼ºË-¿ª·¢°å.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #include "lcd.h"
+   3          #include <ds1302.h>
+   4          #include <xpt2046.h>
+   5          
+   6          #define uchar unsigned char
+   7          #define uint unsigned int
+   8          #define Key_juzhen P1
+   9          //¿ÕÆø¼ì²â
+  10          sbit k1=P3^1;    //Ä£Ê½(¼ì²â»òÉèÖÃ)k1
+  11          sbit k2=P3^2;    //¼Ó
+  12          sbit k3=P3^3;    //¼õ
+  13          
+  14          sbit beep=P1^5;
+  15          uchar mode=0;
+  16          uchar temp;
+  17          uchar temph=5;
+  18          uchar flag;
+  19          //Ê±ÖÓÉèÖÃ
+  20          sbit k4=P3^0;
+  21          uchar SetState,SetPlace;
+  22          uchar KeyValue; 
+  23          uchar TIME[]={0, 0, 0x13, 0x01, 0x09, 0x06, 0x18};
+  24          //ÑÓÊ±º¯Êý(1ºÁÃë)
+  25          void delayms(uchar xms)
+  26          {
+  27   1        uchar i,j;
+  28   1        for(i=xms;i>0;i--)
+  29   1          for(j=110;j>0;j--);
+  30   1      }
+  31          //¿ÕÆø¼ì²âÄ£¿é
+  32          void key_pros()//°´¼ü´¦Àíº¯Êý£¨¿ÕÆø¼ì²â£©
+  33          {
+  34   1        if(k1==0)
+  35   1        {
+  36   2          delayms(100);
+  37   2          if(k1==0)
+  38   2          {
+  39   3            mode++;
+  40   3            flag=0;
+  41   3            if(mode==2)
+  42   3            {
+  43   4              mode=0;
+  44   4              flag=1;
+  45   4            }
+  46   3            while(!k1); 
+  47   3          }
+  48   2        }
+  49   1        if(mode==1)//k1°´ÏÂÒ»´Î
+  50   1        {
+  51   2          if(k2==0)
+  52   2          {
+  53   3            delayms(100);
+  54   3            if(k2==0)
+  55   3            {
+C51 COMPILER V9.01   ¿¼ºË_¿ª·¢_å                                                           09/25/2018 18:07:57 PAGE 2   
+
+  56   4              temph+=1;
+  57   4            }
+  58   3            while(!k2); 
+  59   3          }
+  60   2          
+  61   2          if(k3==0)
+  62   2          {
+  63   3            delayms(100);
+  64   3            if(k3==0)
+  65   3            {
+  66   4              temph-=1;
+  67   4              if(temph<=0)
+  68   4              temph=0;
+  69   4            }
+  70   3            while(!k3);
+  71   3          }
+  72   2        }
+  73   1      }
+  74          
+  75          void data_pros()  //Êý¾Ý´¦Àíº¯Êý  ¿ÕÆøÖµ0-500£¬ÈýÎ»Êý
+  76          {
+  77   1        uchar tempbuf[3],temp_buf[3],i;
+  78   1      
+  79   1        tempbuf[0]=temp/100+0x30;   //°ÙÎ»
+  80   1        tempbuf[1]=temp%100/10+0x30;  //Ê®Î»      
+  81   1        tempbuf[2]=temp%100%10+0x30;  //¸öÎ»
+  82   1        
+  83   1        temp_buf[0]=temph/100+0x30;
+  84   1        temp_buf[1]=temph%100/10+0x30;        
+  85   1        temp_buf[2]=temph%100%10+0x30;
+  86   1      
+  87   1        for(i=0;i<3;i++)
+  88   1        {
+  89   2          LcdWriteCom(0x80+i);
+  90   2          LcdWriteData(tempbuf[i]);
+  91   2        }
+  92   1      
+  93   1        for(i=0;i<3;i++)
+  94   1        {
+  95   2          LcdWriteCom(0xc0+i);
+  96   2          LcdWriteData(temp_buf[i]);
+  97   2        }
+  98   1      }
+  99          
+ 100          void sound()
+ 101          {
+ 102   1        uchar i=100;
+ 103   1        while(i--)
+ 104   1        {
+ 105   2          beep=~beep;
+ 106   2          delayms(10000);
+ 107   2        }
+ 108   1      }
+ 109          
+ 110          void baojinpros() //±¨¾¯´¦Àí
+ 111          {
+ 112   1        if(temp>=temph&&flag==1)
+ 113   1        {
+ 114   2          sound();//·äÃùÆ÷½Ð
+ 115   2        }
+ 116   1        else
+ 117   1        { 
+C51 COMPILER V9.01   ¿¼ºË_¿ª·¢_å                                                           09/25/2018 18:07:57 PAGE 3   
+
+ 118   2          beep=1;//  ·äÃùÆ÷²»½Ð
+ 119   2        }
+ 120   1      }
+ 121          
+ 122          //Ê±ÖÓÏÔÊ¾Ä£¿é
+ 123          
+ 124          void LcdDisplay()
+ 125          {
+ 126   1        LcdWriteCom(0x84);
+ 127   1        LcdWriteData('2');
+ 128   1        LcdWriteData('0');
+ 129   1        LcdWriteData('0'+TIME[6]/16);     //Äê
+ 130   1        LcdWriteData('0'+(TIME[6]&0x0f));
+ 131   1        LcdWriteData('-');
+ 132   1        LcdWriteData('0'+TIME[4]/16);     //ÔÂ
+ 133   1        LcdWriteData('0'+(TIME[4]&0x0f));
+ 134   1        LcdWriteData('-');
+ 135   1        LcdWriteData('0'+TIME[3]/16);     //ÈÕ
+ 136   1        LcdWriteData('0'+(TIME[3]&0x0f));
+ 137   1        LcdWriteData('-');
+ 138   1        LcdWriteData('0'+(TIME[5]&0x07)); //ÐÇÆÚ
+ 139   1      
+ 140   1        LcdWriteCom(0x88+0X40);
+ 141   1        LcdWriteData('0'+TIME[2]/16);       //Ê±
+ 142   1        LcdWriteData('0'+(TIME[2]&0x0f));        
+ 143   1        LcdWriteData('-');
+ 144   1        LcdWriteData('0'+TIME[1]/16);       //·Ö
+ 145   1        LcdWriteData('0'+(TIME[1]&0x0f)); 
+ 146   1        LcdWriteData('-');
+ 147   1        LcdWriteData('0'+TIME[0]/16);       //Ãë
+ 148   1        LcdWriteData('0'+(TIME[0]&0x0f)); 
+ 149   1      }
+ 150          
+ 151          void Int0Configuration()// ÅäÖÃÍâ²¿ÖÐ¶Ï0,ÎÞÊäÈëÎÞÊä³ö
+ 152          {
+ 153   1        //ÉèÖÃINT0
+ 154   1        IT0=1;//Ìø±äÑØ³ö·¢·½Ê½£¨ÏÂ½µÑØ£©
+ 155   1        EX0=1;//´ò¿ªINT0µÄÖÐ¶ÏÔÊÐí¡£
+ 156   1        EA=1;//´ò¿ª×ÜÖÐ¶Ï 
+ 157   1      }
+ 158          
+ 159          void Int0() interrupt 0 //Íâ²¿ÖÐ¶Ï0 ÖÐ¶Ïº¯Êý,ÎÞÊäÈëÎÞÊä³ö  
+ 160          {
+ 161   1        delayms(10);
+ 162   1        if(k4==0)//Èç¹ûÒª°´ÏÂS3½øÈëÊ±ÖÓÉèÖÃ£¬ÄÇÃ´½«setstate·­×ª£¬setplaceÖÃÁã£¨±ãÓÚÑ¡Ôñ¸Ä±äÊ²Ã´£©
+ 163   1        {
+ 164   2          delayms(100);
+ 165   2          if(k4==0)
+ 166   2          {
+ 167   3            SetState=~SetState;
+ 168   3            SetPlace=0;
+ 169   3            Ds1302Init();     
+ 170   3          } 
+ 171   2        }
+ 172   1      }
+ 173          
+ 174          
+ 175          void main()
+ 176          {
+ 177   1        //uchar i;
+ 178   1        beep=0;
+ 179   1        Int0Configuration();
+C51 COMPILER V9.01   ¿¼ºË_¿ª·¢_å                                                           09/25/2018 18:07:57 PAGE 4   
+
+ 180   1        LcdInit();  //lcd³õÊ¼»¯
+ 181   1        Ds1302Init(); //Ê±ÖÓÐ¾Æ¬³õÊ¼»¯
+ 182   1        while(1)
+ 183   1        {   
+ 184   2          if(SetState==0)
+ 185   2          {
+ 186   3            Ds1302ReadTime();
+ 187   3          }
+ 188   2          LcdDisplay();//Ê±¼äÏÔÊ¾
+ 189   2          key_pros();//°´¼ü´¦Àíº¯Êý
+ 190   2          data_pros();//Êý¾Ý´¦Àíº¯Êý
+ 191   2          baojinpros(); //±¨¾¯´¦Àí£¨·äÃùÆ÷¶¯Ì¬£©
+ 192   2          temp = Read_AD_Data(0xE4);  //¶ÁÈ¡Õâ¸öÍ¨µÀµÄÖµ A2A1A0=  ¸ù¾ÝÊý¾ÝÊÖ²á X+Í¨µÀ   
+ 193   2        }
+ 194   1        
+ 195   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    574    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     14       7
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

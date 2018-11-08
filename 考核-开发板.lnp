@@ -1,0 +1,6 @@
+"STARTUP.obj",
+"考核-开发板.obj",
+"lcd.obj",
+"ds1302.obj",
+"xpt2046.obj" 
+TO "考核-开发板" 

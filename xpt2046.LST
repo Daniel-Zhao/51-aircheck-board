@@ -1,0 +1,84 @@
+C51 COMPILER V9.01   XPT2046                                                               09/25/2018 18:07:58 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE XPT2046
+OBJECT MODULE PLACED IN xpt2046.OBJ
+COMPILER INVOKED BY: E:\mdk514\keil5\C51\BIN\C51.EXE xpt2046.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          #include <xpt2046.h>
+   2          
+   3          #define uchar unsigned char
+   4          #define uint unsigned int
+   5          //开发板上AD转换模块引脚设置
+   6          
+   7          /*void SPI_Start()//SPI 初始化
+   8          {
+   9            DCLK=0;
+  10            CS=1;
+  11            DIN=1;
+  12            DCLK=1;
+  13            CS=0;
+  14          }*/
+  15          
+  16          void SPI_Write(uchar dat)//使用SPI写入数据,写入一个字节（八位），先搞最高位
+  17          {
+  18   1        uchar i;
+  19   1        DCLK=0;
+  20   1        for(i=0;i<8;i++)
+  21   1        {
+  22   2          DIN=dat>>7;//放置最高位  先传送最高位
+  23   2          dat<<=1;
+  24   2          DCLK=0;//上升沿放入数据，根据时序图，时序一直变化
+  25   2          DCLK=1;   
+  26   2        }
+  27   1      }
+  28          uint SPI_Read()//使用SPI读取数据，返回dat
+  29          {
+  30   1        uint i,dat=0;
+  31   1        DCLK=0;
+  32   1        for(i=0;i<12;i++)//从低位开始接收
+  33   1        {
+  34   2          dat<<=1;
+  35   2          DCLK=1;
+  36   2          DCLK=0;
+  37   2          dat|=DOUT;  
+  38   2        }
+  39   1        return dat;
+  40   1      }
+  41          uint Read_AD_Data(uchar cmd)//先写入，再读取
+  42          {
+  43   1        uchar i;
+  44   1        uint AD_Value;
+  45   1        DCLK = 0;     //根据时序图，讲时钟片选拉低
+  46   1        CS  = 0;
+  47   1        SPI_Write(cmd);    //写入
+  48   1        for(i=6; i>0; i--);   //延时等待转换结果（时序图上有延时）
+  49   1        DCLK = 1;   //发送一个时钟周期，清除BUSY
+  50   1        _nop_();
+  51   1        _nop_();
+  52   1        DCLK = 0;
+  53   1        _nop_();
+  54   1        _nop_();
+  55   1        AD_Value=SPI_Read(); //将读取的数值保存在定义的变量里，函数末尾返回变量
+C51 COMPILER V9.01   XPT2046                                                               09/25/2018 18:07:58 PAGE 2   
+
+  56   1        CS = 1;         //片选拉高（关闭）
+  57   1        return AD_Value;  
+  58   1      }
+  59          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     89    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
